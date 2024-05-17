@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const { signToken} = require('../utils/auth');
+const { signToken, AuthenticationError} = require('../utils/auth');
 
 const resolvers = {
     Query: {
@@ -36,12 +36,12 @@ const resolvers = {
             const user = await User.findOne({email});
 
             if(!user) {
-                throw "Could not authenticate user.";
+                throw AuthenticationError;
             }
             const correctPw = await User.isCorrectPassword(password);
 
             if (!correctPw) {
-                throw "Could not authenticate user.";
+                throw AuthenticationError;
               }
             
             const token = signToken(user);

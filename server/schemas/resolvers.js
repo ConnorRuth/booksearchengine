@@ -19,7 +19,7 @@ const resolvers = {
             const token = signToken(user);
             return {token, user};
         },
-        saveBook: async (parent, {userId, book} ) => {
+        saveBook: async (parent, {userId, book}, context ) => {
             if (context.user) {
             return User.findOneAndUpdate(
                 { _id: userId },
@@ -34,10 +34,10 @@ const resolvers = {
         }
         throw AuthenticationError;
         },
-        deleteBook: async (parent, {userId, book} ) => {
+        deleteBook: async (parent, { book}, context ) => {
             if (context.user) {
                 return User.findOneAndUpdate(
-                    { _id: userId },
+                    { _id: context.user._id },
                     { $pull: { books: book } },
                     { new: true }
                 );

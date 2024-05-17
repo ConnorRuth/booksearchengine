@@ -6,6 +6,12 @@ const resolvers = {
         user: async (parent, { username }) => {
             return User.findOne({ username }).populate('books');
           },
+          me: async (parent, args, context) => {
+            if (context.user) {
+              return User.findOne({ _id: context.user._id });
+            }
+            throw AuthenticationError;
+          },
     },
     Mutation: {
         addUser: async (parent, {username, email, password} ) => {
@@ -14,6 +20,7 @@ const resolvers = {
             return {token, user};
         },
         saveBook: async (parent, {userId, book} ) => {
+            if (context.user) {
             return User.findOneAndUpdate(
                 { _id: userId },
                 {
@@ -24,13 +31,18 @@ const resolvers = {
                     runValidators: true,
                 }
             )
+        }
+        throw AuthenticationError;
         },
         deleteBook: async (parent, {userId, book} ) => {
-            return User.findOneAndUpdate(
-                { _id: userId },
-                { $pull: { books: book } },
-                { new: true }
-            );
+            if (context.user) {
+                return User.findOneAndUpdate(
+                    { _id: userId },
+                    { $pull: { books: book } },
+                    { new: true }
+                );
+            }
+            throw AuthenticationError;
         },
         login: async (parent, {email, password} ) => {
             const user = await User.findOne({email});

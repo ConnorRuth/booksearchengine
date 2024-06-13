@@ -3,12 +3,17 @@ const { signToken, AuthenticationError} = require('../utils/auth');
 
 const resolvers = {
     Query: {
-        user: async (parent, { username }) => {
-            return User.findOne({ username }).populate('books');
+        user: async (parent, { userId }) => {
+            return User.findOne({ _id: userId }).populate('books');
           },
           me: async (parent, args, context) => {
+            console.log("me request recieved");
+   
             if (context.user) {
-              return User.findOne({ _id: context.user._id });
+                console.log(context);
+              const user = await User.findById(context.user._id);
+              console.log(user);
+              return user
             }
             throw AuthenticationError;
           },
@@ -19,12 +24,13 @@ const resolvers = {
             const token = signToken(user);
             return {token, user};
         },
-        saveBook: async (parent, {userId, book}, context ) => {
+        saveBook: async (parent, { input}, context ) => {
             if (context.user) {
+                console.log(input);
             return User.findOneAndUpdate(
-                { _id: userId },
+                { _id: context.user._id },
                 {
-                    $addToSet: { books: book},
+                    $addToSet: { savedBooks: input},
                 },
                 {
                     new: true,
@@ -34,18 +40,18 @@ const resolvers = {
         }
         throw AuthenticationError;
         },
-        deleteBook: async (parent, { book}, context ) => {
+        deleteBook: async (parent, { input}, context ) => {
             if (context.user) {
                 return User.findOneAndUpdate(
                     { _id: context.user._id },
-                    { $pull: { books: book } },
+                    { $pull: { savedBooks: input } },
                     { new: true }
                 );
             }
             throw AuthenticationError;
         },
         login: async (parent, {email, password} ) => {
-            const user = await User.findOne({email});
+            const user = await User.findOne({email });//add username?
 
             if(!user) {
                 throw AuthenticationError;
